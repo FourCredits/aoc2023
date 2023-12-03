@@ -1,19 +1,37 @@
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE TupleSections #-}
 
-module Day03 where
-
--- module Day03 (solve, part1, part2) where
+module Day03 (solve, part1, part2, parse, Field, Part, Position) where
 
 import Data.Array
 import Data.Char (isDigit)
 import Data.Function ((&))
+import Data.Functor ((<&>))
+import Data.List (elemIndices, intersect)
+import Data.Maybe (mapMaybe)
 
 solve :: String -> (String, String)
-solve _ = ("unimplemented", "unimplemented")
+solve input =
+  let parsed = parse input
+   in (show $ part1 parsed, show $ part2 parsed)
 
-part1 :: String -> Int
-part1 (parse -> (field, potentialParts)) =
+part1 :: (Field, [Part], [Position]) -> Int
+part1 (field, potentialParts, _) =
   potentialParts & filter (isPart field) & map (lookupValue field) & sum
+
+part2 :: (Field, [Part], [Position]) -> Int
+part2 (field, potentialParts, potentialGears) =
+  potentialGears & mapMaybe (getGear potentialParts) <&> findRatio & sum
+  where
+    findRatio (partA, partB) = lookupValue field partA * lookupValue field partB
+
+getGear :: [Part] -> Position -> Maybe (Part, Part)
+getGear parts gear = case filter (isAdjacent gear) parts of
+  [partA, partB] -> Just (partA, partB)
+  _ -> Nothing
+
+isAdjacent :: Position -> Part -> Bool
+isAdjacent position part =
+  not $ null $ intersect (partPositions part) (neighbouringPositions position)
 
 lookupValue :: Field -> Part -> Int
 lookupValue field (Part r cs ce) = read $ [field ! (r, c) | c <- [cs .. ce]]
@@ -25,12 +43,13 @@ type Position = (Int, Int)
 
 type Field = Array Position Char
 
-data Part = Part Int Int Int
+data Part = Part Int Int Int deriving (Show, Eq)
+
+partPositions :: Part -> [Position]
+partPositions (Part r cs ce) = [(r, c) | c <- [cs .. ce]]
 
 isPart :: Field -> Part -> Bool
-isPart field (Part r cs ce) = any isSymbol $ do
-  c <- [cs .. ce]
-  neighbours field (r, c)
+isPart field part = any (any isSymbol . neighbours field) (partPositions part)
 
 neighbours :: Field -> Position -> [Char]
 neighbours field (r, c) = positions & filter (inBounds bounds_) & map (field !)
@@ -47,24 +66,43 @@ neighbours field (r, c) = positions & filter (inBounds bounds_) & map (field !)
       ]
     bounds_ = bounds field
 
+neighbouringPositions :: Position -> [Position]
+neighbouringPositions (r, c) =
+  [ (r + 1, c - 1),
+    (r + 1, c),
+    (r + 1, c + 1),
+    (r, c - 1),
+    (r, c + 1),
+    (r - 1, c - 1),
+    (r - 1, c),
+    (r - 1, c + 1)
+  ]
+
 inBounds :: (Position, Position) -> Position -> Bool
 inBounds ((loR, loC), (hiR, hiC)) (r, c) =
   loR <= r && r <= hiR && loC <= c && c <= hiC
 
-parse :: String -> (Field, [Part])
+parse :: String -> (Field, [Part], [Position])
 parse input =
-  let ls = input & lines
-      parts = do
-        (row_, string) <- enumerate ls
-        (colStart_, colEnd_) <- findPotentialParts string
-        return $ Part row_ colStart_ colEnd_
+  let ls = lines input
+      enumeratedLines = enumerate ls
       numRows = length ls
       numCols = length (head ls)
       field = listArray ((0, 0), (numRows - 1, numCols - 1)) (concat ls)
-   in (field, parts)
+      parts = findPotentialParts enumeratedLines
+      gears = findPotentialGears enumeratedLines
+   in (field, parts, gears)
 
-findPotentialParts :: String -> [(Int, Int)]
-findPotentialParts input = go Nothing [] (enumerate input)
+findPotentialGears :: [(Int, String)] -> [Position]
+findPotentialGears input = do
+  (rowIndex, rowString) <- input
+  rowString & elemIndices '*' <&> (rowIndex,)
+
+findPotentialParts :: [(Int, String)] -> [Part]
+findPotentialParts input = do
+  (row_, rowString) <- input
+  (colStart_, colEnd_) <- go Nothing [] (enumerate rowString)
+  pure $ Part row_ colStart_ colEnd_
   where
     go Nothing acc ((position, c) : cs)
       | isDigit c = go (Just (position, position)) acc cs
@@ -77,6 +115,3 @@ findPotentialParts input = go Nothing [] (enumerate input)
 
 enumerate :: [a] -> [(Int, a)]
 enumerate = zip [0 ..]
-
-part2 :: String -> Int
-part2 = undefined
