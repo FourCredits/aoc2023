@@ -16,6 +16,7 @@ build-type:     Simple
 data-files:
     inputs/day01.txt
     inputs/day02.txt
+    inputs/day03.txt
 
 source-repository head
   type: git
@@ -25,23 +26,32 @@ library
   exposed-modules:
       Day01
       Day02
+      Day03
   hs-source-dirs:
       lib
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints
   build-depends:
-      base >=4.17.2 && <4.18
+      array >=0.5.4 && <0.6
+    , base >=4.17.2 && <4.18
     , containers >=0.6.7 && <0.7
     , parsec >=3.1.16 && <3.2
   default-language: Haskell2010
 
 executable aoc2023
   main-is: Main.hs
+  other-modules:
+      Paths_aoc2023
+  autogen-modules:
+      Paths_aoc2023
   hs-source-dirs:
       app
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints
   build-depends:
       aoc2023
+    , array >=0.5.4 && <0.6
     , base >=4.17.2 && <4.18
+    , containers >=0.6.7 && <0.7
+    , parsec >=3.1.16 && <3.2
   default-language: Haskell2010
 
 test-suite spec
@@ -50,6 +60,7 @@ test-suite spec
   other-modules:
       Day01Spec
       Day02Spec
+      Day03Spec
       Utils
       Paths_aoc2023
   autogen-modules:
@@ -61,6 +72,9 @@ test-suite spec
       hspec-discover:hspec-discover
   build-depends:
       aoc2023
+    , array >=0.5.4 && <0.6
     , base >=4.17.2 && <4.18
+    , containers >=0.6.7 && <0.7
     , hspec ==2.*
+    , parsec >=3.1.16 && <3.2
   default-language: Haskell2010
