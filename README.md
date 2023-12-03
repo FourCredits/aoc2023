@@ -17,3 +17,4 @@
 - [ ] experiment with using the `relude`?
 - [x] format
 - [ ] fix failing test for day 2
+- [ ] clean-up day 3
