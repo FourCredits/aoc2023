@@ -16,3 +16,4 @@
 - [ ] use `Text` rather than `String`?
 - [ ] experiment with using the `relude`?
 - [x] format
+- [ ] fix failing test for day 2
