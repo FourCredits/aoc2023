@@ -1,0 +1,45 @@
+spec-version: 0.36.0
+name: aoc2023
+version: 0.2.0
+synopsis: Advent of code, written in Haskell
+author: Erik Grundy <erik.grundy@gmail.com>
+maintainer: Erik Grundy <erik.grundy@gmail.com>
+github: FourCredits/aoc2023
+category: Development
+
+dependencies:
+  - base >= 4.17.2 && < 4.18
+
+ghc-options:
+  - -Wall
+  - -Wcompat
+  - -Widentities
+  - -Wincomplete-record-updates
+  - -Wincomplete-uni-patterns
+  - -Wpartial-fields
+  - -Wredundant-constraints
+
+data-files:
+  - inputs/**/*
+
+library:
+  source-dirs: lib
+  dependencies:
+    - containers >= 0.6.7 && < 0.7
+    - parsec     >= 3.1.16 && < 3.2
+
+executable:
+  main: Main.hs
+  source-dirs: app
+  dependencies:
+    - aoc2023
+
+tests:
+  spec:
+    main: Spec.hs
+    source-dirs: test
+    dependencies:
+      - hspec == 2.*
+      - aoc2023
+    build-tools: hspec-discover
+    generated-other-modules: Paths_aoc2023
