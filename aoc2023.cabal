@@ -18,6 +18,7 @@ data-files:
     inputs/day02.txt
     inputs/day03.txt
     inputs/day04.txt
+    inputs/day05.txt
     inputs/day06.txt
 
 source-repository head
@@ -30,6 +31,7 @@ library
       Day02
       Day03
       Day04
+      Day05
       Day06
   hs-source-dirs:
       lib
@@ -66,6 +68,7 @@ test-suite spec
       Day02Spec
       Day03Spec
       Day04Spec
+      Day05Spec
       Day06Spec
       Utils
       Paths_aoc2023
