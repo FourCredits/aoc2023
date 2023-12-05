@@ -10,11 +10,11 @@
     - [x] day 1
     - [x] day 2
 - [x] make api of modules better something like `String -> (String, String)` so you can skip parsing twice
-- [ ] publish
+- [x] publish
 - [x] rename `src` to `lib`
-- [ ] use the `Paths_` and data files to store the input files
+- [x] use the `Paths_` and data files to store the input files
 - [ ] use `Text` rather than `String`?
 - [ ] experiment with using the `relude`?
 - [x] format
-- [ ] fix failing test for day 2
-- [ ] clean-up day 3
+- [x] fix failing test for day 2
+- [x] clean-up day 3
