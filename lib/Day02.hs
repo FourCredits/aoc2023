@@ -22,7 +22,7 @@ part2 = sum . map (power . fold . revealedSets)
 
 data Game = Game {gameId :: Int, revealedSets :: [Set]}
 
-data Set = Set {reds :: Int, greens :: Int, blues :: Int} deriving (Eq, Ord)
+data Set = Set {reds :: Int, greens :: Int, blues :: Int}
 
 instance Semigroup Set where
   (Set r1 g1 b1) <> Set r2 g2 b2 = Set (max r1 r2) (max g1 g2) (max b1 b2)
@@ -34,7 +34,9 @@ power :: Set -> Int
 power (Set r g b) = product [r, g, b]
 
 gameIsPossible :: Set -> Game -> Bool
-gameIsPossible inputs (Game _ sets) = all (inputs >=) sets
+gameIsPossible (Set inRed inGreen inBlue) (Game _ sets) =
+  let (Set maxRed maxGreen maxBlue) = fold sets
+   in inRed >= maxRed && inGreen >= maxGreen && inBlue >= maxBlue
 
 inputParser :: Parsec String u [Game]
 inputParser = sepEndBy gameParser newline
