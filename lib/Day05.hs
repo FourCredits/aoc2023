@@ -8,8 +8,7 @@ import Control.Monad (void)
 import Data.Function ((&))
 import Data.Functor ((<&>))
 import Data.List (foldl')
-import Data.Maybe (fromMaybe, mapMaybe)
-import Debug.Trace (traceShow)
+import Data.Maybe (fromMaybe)
 import qualified Text.Parsec as P
 
 type Map = [Range]
@@ -59,7 +58,8 @@ mapRange source (Range {destinationStart, sourceStart, rangeLength})
 part2 :: ([Int], [Map]) -> Int
 part2 (seedRanges, maps) =
   let spans = makeSpans seedRanges
-      f ss m = case traceShow (ss, m) $ concatMap (convertSpan m) ss of
+      -- f ss m = case concatMap (convertSpan2 m) ss of
+      f ss m = case concatMap (convertSpan2 m) ss of
         [] -> ss
         result -> result
       finalSpans = foldl' f spans maps
@@ -70,15 +70,44 @@ type Span = (Int, Int)
 -- TODO: be a little cleverer: you have to break off chunks of the span, then
 -- just return what's left once you've exhausted the ranges
 
-convertSpan :: Map -> Span -> [Span]
-convertSpan ranges (lo, hi) = ranges & filter relevant & mapMaybe extractSubSpan
+-- convertSpan :: Map -> Span -> [Span]
+-- convertSpan ranges (lo, hi) = ranges & filter relevant & mapMaybe extractSubSpan
+--   where
+--     extractSubSpan (Range dS sS rL) =
+--       if loInDest > hiInDest then Nothing else Just (loInDest, hiInDest)
+--       where
+--         loInDest = dS + max 0 (lo - sS)
+--         hiInDest = dS + min rL (hi - sS)
+--     relevant (Range _ sS rL) = sS <= hi && (sS + rL) >= lo
+
+convertSpan2 :: Map -> Span -> [Span]
+-- if no part of the map matches a number, then it's passed through as is
+convertSpan2 [] inputSpan = [inputSpan]
+-- if all of the input is matched, no need to keep going
+convertSpan2 ((Range dS sS rL) : rs') (l, h)
+  -- input span and source range don't overlap at all. continue to next
+  | h < sS || l > sE = convertSpan2 rs' (l, h)
+  -- input span is entirely inside source range
+  | l >= sS && h <= sE =
+      [centreSpan]
+  -- input span has overhang on both sides
+  | l < sS && h > sE =
+      let lowResult = convertSpan2 rs' lowOverhang
+          highResult = convertSpan2 rs' highOverhang
+       in centreSpan : lowResult <> highResult
+  -- input span has overhang on low side
+  | l < sS && h <= sE = centreSpan : convertSpan2 rs' lowOverhang
+  -- input span has overhang on high side
+  | l >= sS && h > sE = centreSpan : convertSpan2 rs' highOverhang
+  | otherwise = error "unreachable"
   where
-    extractSubSpan (Range dS sS rL) =
-      if loInDest > hiInDest then Nothing else Just (loInDest, hiInDest)
-      where
-        loInDest = dS + max 0 (lo - sS)
-        hiInDest = dS + min rL (hi - sS)
-    relevant (Range _ sS rL) = sS <= hi && (sS + rL) >= lo
+    sE = sS + rL - 1
+    centreSpan = (dS + max (l - sS) 0, dS + min (h - sS) (rL - 1))
+    lowOverhang = (l, sS - 1)
+    highOverhang = (sE + 1, h)
+    convertIfValid s@(lo, hi)
+      | lo <= hi = convertSpan2 rs' s
+      | otherwise = []
 
 makeSpans :: [Int] -> [Span]
 makeSpans = go []

@@ -19,8 +19,8 @@ spec = do
     it "real" $ (real <&> part1) `shouldBe` Right 525792406
 
   describe "part 2" $ do
-    -- it "real" $ (real <&> part2) `shouldBe` Right 0
     it "example input" $ part2 exampleParsed `shouldBe` 46
+    it "real" $ (real <&> part2) `shouldBe` Right 79004094
 
 exampleInput :: String
 exampleInput =
