@@ -1,6 +1,6 @@
 spec-version: 0.36.0
 name: aoc2023
-version: 0.2.0
+version: 0.6.0
 synopsis: Advent of code, written in Haskell
 author: Erik Grundy <erik.grundy@gmail.com>
 maintainer: Erik Grundy <erik.grundy@gmail.com>

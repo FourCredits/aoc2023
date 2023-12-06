@@ -18,4 +18,3 @@
 - [x] format
 - [x] fix failing test for day 2
 - [x] clean-up day 3
-- [ ] add a makefile for testing/updating cabal file, etc
