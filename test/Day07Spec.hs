@@ -2,7 +2,7 @@ module Day07Spec where
 
 import Data.Function ((&))
 import Data.Functor ((<&>))
-import Day07 (Card (..), Hand (..), parse, part1)
+import Day07 (Card (..), Hand (..), parse, part1, part2)
 import Test.Hspec
 import Utils (realInput)
 
@@ -20,6 +20,13 @@ spec = do
 
     it "real input" $ do
       part1 <$> real `shouldBe` Right 253205868
+
+  describe "part 2" $ do
+    it "example input" $ do
+      part2 exampleParsed `shouldBe` 5905
+
+    it "real input" $ do
+      part2 <$> real `shouldBe` Right 253907829
 
 exampleParsed :: [(Hand, Int)]
 exampleParsed =

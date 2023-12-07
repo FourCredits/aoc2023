@@ -1,11 +1,12 @@
 {-# LANGUAGE FlexibleContexts #-}
 
-module Day07 (parse, Card (..), Hand (..), HandType, part1) where
+module Day07 (solve, parse, Card (..), Hand (..), HandType, part1, part2) where
 
 import Control.Applicative (asum)
+import Control.Arrow ((&&&))
 import Data.Function (on)
 import Data.Functor (($>), (<&>))
-import Data.List (group, sort, sortOn)
+import Data.List (delete, group, sort, sortOn)
 import qualified Text.Parsec as P
 
 data Card
@@ -22,7 +23,7 @@ data Card
   | Q
   | K
   | A
-  deriving (Show, Eq, Ord)
+  deriving (Show, Eq, Ord, Enum)
 
 newtype Hand = Hand {cards :: [Card]} deriving (Eq, Show)
 
@@ -38,6 +39,11 @@ data HandType
   | FourOfAKind
   | FiveOfAKind
   deriving (Show, Eq, Ord)
+
+solve :: String -> (String, String)
+solve = ((display . fmap part1) &&& (display . fmap part2)) . parse
+  where
+    display = either (const "parse error") show
 
 handType :: Hand -> HandType
 handType = go . sort . map length . group . sort . cards
@@ -86,3 +92,35 @@ part1 = sum . zipWith winnings [1 ..] . sortOn fst
 
 winnings :: Int -> (a, Int) -> Int
 winnings rank (_, bet) = bet * rank
+
+part2 :: [(Hand, Int)] -> Int
+part2 = sum . zipWith winnings [1 ..] . sortOn (handWithJokers . fst)
+
+newtype HandWithJokers = HandWithJokers
+  { cardsWithJokers :: [CardWithJokers]
+  }
+  deriving (Show, Eq)
+
+instance Ord HandWithJokers where
+  compare = (compare `on` handTypeWithJokers) `thenOn` cardsWithJokers
+
+handWithJokers :: Hand -> HandWithJokers
+handWithJokers = HandWithJokers . map CardWithJokers . cards
+
+handTypeWithJokers :: HandWithJokers -> HandType
+handTypeWithJokers = maximum . map (handType . Hand) . evaluateHands . cardsWithJokers
+
+evaluateHands :: [CardWithJokers] -> [[Card]]
+evaluateHands [] = [[]]
+evaluateHands ((CardWithJokers J) : rest) =
+  (:) <$> delete J [Two .. A] <*> evaluateHands rest
+evaluateHands ((card : rest)) = map (getCard card :) (evaluateHands rest)
+
+newtype CardWithJokers = CardWithJokers {getCard :: Card} deriving (Show, Eq)
+
+instance Ord CardWithJokers where
+  compare (CardWithJokers a) (CardWithJokers b) = case (a, b) of
+    (J, J) -> EQ
+    (_, J) -> GT
+    (J, _) -> LT
+    (x, y) -> compare x y

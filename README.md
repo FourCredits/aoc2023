@@ -19,3 +19,4 @@
 - [x] fix failing test for day 2
 - [x] clean-up day 3
 - [ ] extract out common threads (e.g. int parser)
+- [ ] optimise and tidy day 7, especially part 2
