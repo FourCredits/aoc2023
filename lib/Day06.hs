@@ -37,24 +37,3 @@ possibleDistances totalTime =
 
 distanceTravelled :: Int -> Int -> Int
 distanceTravelled totalTime chargeTime = chargeTime * (totalTime - chargeTime)
-
-{-
-you want the solution of the following equations
-let u = totalTime
-let v = currentRecord
-let t = chargeTime
-f  t = t * (u - t)
-     = u * t - t^2
-f' t = u - 2t
-maximum where f' t = 0
-u - 2t = 0
-t = u / 2
-
-find t where
-f t = t * (u - t) > v
-to find borders, solve
-(-1) * t^2 + (u) * t + (-v) = 0
-t^2 + (-u) * t + (v) = 0
-x = (-b +- sqrt(b^2 - 4ac)) / 2a
-x = (u +- sqrt(u^2 - 4v)) / 2
--}
