@@ -20,6 +20,7 @@ data-files:
     inputs/day04.txt
     inputs/day05.txt
     inputs/day06.txt
+    inputs/day07.txt
 
 source-repository head
   type: git
@@ -33,6 +34,7 @@ library
       Day04
       Day05
       Day06
+      Day07
   hs-source-dirs:
       lib
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints
@@ -70,6 +72,7 @@ test-suite spec
       Day04Spec
       Day05Spec
       Day06Spec
+      Day07Spec
       Utils
       Paths_aoc2023
   autogen-modules:
