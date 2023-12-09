@@ -1,5 +1,6 @@
 module Day08Spec where
 
+import Data.Array (listArray)
 import Data.Function ((&))
 import Data.Functor ((<&>))
 import Data.Map (fromList)
@@ -18,19 +19,29 @@ spec = do
     it "example 2" $ do
       parse exampleInput2 `shouldBe` Right exampleParsed2
 
+    it "example 3" $ do
+      parse exampleInput3 `shouldBe` Right exampleParsed3
+
   describe "part 1" $ do
     it "example input 1" $ do
-      part1 exampleParsed1 `shouldBe` 2
+      part1 exampleParsed1 `shouldBe` Just 2
 
     it "example input 2" $ do
-      part1 exampleParsed2 `shouldBe` 6
+      part1 exampleParsed2 `shouldBe` Just 6
 
     it "real" $ do
-      part1 <$> real `shouldBe` Right 11567
+      part1 <$> real `shouldBe` Right (Just 11567)
 
-exampleParsed1, exampleParsed2 :: Input
+  describe "part 2" $ do
+    it "example input 3" $ do
+      part2 exampleParsed3 `shouldBe` Just 6
+
+    it "real" $ do
+      part2 <$> real `shouldBe` Right (Just 9858474970153)
+
+exampleParsed1, exampleParsed2, exampleParsed3 :: Input
 exampleParsed1 =
-  ( [R, L],
+  ( listArray (0, 1) [R, L],
     fromList
       [ ("AAA", ("BBB", "CCC")),
         ("BBB", ("DDD", "EEE")),
@@ -42,15 +53,28 @@ exampleParsed1 =
       ]
   )
 exampleParsed2 =
-  ( [L, L, R],
+  ( listArray (0, 2) [L, L, R],
     fromList
       [ ("AAA", ("BBB", "BBB")),
         ("BBB", ("AAA", "ZZZ")),
         ("ZZZ", ("ZZZ", "ZZZ"))
       ]
   )
+exampleParsed3 =
+  ( listArray (0, 1) [L, R],
+    fromList
+      [ ("11A", ("11B", "XXX")),
+        ("11B", ("XXX", "11Z")),
+        ("11Z", ("11B", "XXX")),
+        ("22A", ("22B", "XXX")),
+        ("22B", ("22C", "22C")),
+        ("22C", ("22Z", "22Z")),
+        ("22Z", ("22B", "22B")),
+        ("XXX", ("XXX", "XXX"))
+      ]
+  )
 
-exampleInput1, exampleInput2 :: String
+exampleInput1, exampleInput2, exampleInput3 :: String
 exampleInput1 =
   "RL\n\
   \\n\
@@ -67,3 +91,14 @@ exampleInput2 =
   \AAA = (BBB, BBB)\n\
   \BBB = (AAA, ZZZ)\n\
   \ZZZ = (ZZZ, ZZZ)"
+exampleInput3 =
+  "LR\n\
+  \\n\
+  \11A = (11B, XXX)\n\
+  \11B = (XXX, 11Z)\n\
+  \11Z = (11B, XXX)\n\
+  \22A = (22B, XXX)\n\
+  \22B = (22C, 22C)\n\
+  \22C = (22Z, 22Z)\n\
+  \22Z = (22B, 22B)\n\
+  \XXX = (XXX, XXX)"
