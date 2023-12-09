@@ -1,6 +1,6 @@
 spec-version: 0.36.0
 name: aoc2023
-version: 0.6.0
+version: 0.8.0
 synopsis: Advent of code, written in Haskell
 author: Erik Grundy <erik.grundy@gmail.com>
 maintainer: Erik Grundy <erik.grundy@gmail.com>
@@ -8,10 +8,10 @@ github: FourCredits/aoc2023
 category: Development
 
 dependencies:
-  - base >= 4.17.2 && < 4.18
+  - base       >= 4.17.2 && < 4.18
+  - array      >= 0.5.4 && < 0.6
   - containers >= 0.6.7 && < 0.7
   - parsec     >= 3.1.16 && < 3.2
-  - array      >= 0.5.4 && < 0.6
 
 ghc-options:
   - -Wall
