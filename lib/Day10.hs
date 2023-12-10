@@ -3,7 +3,7 @@ module Day10 (part1, solve) where
 import Control.Arrow ((&&&))
 import Data.Array (Array, Ix (inRange), assocs, bounds, listArray, (!))
 import Data.Function ((&))
-import Data.List (find)
+import Data.List (find, unfoldr)
 import Data.Maybe (fromJust)
 
 type Position = (Int, Int)
@@ -59,3 +59,13 @@ neighbours 'F' (r, c) = Right ((r + 1, c), (r, c + 1))
 neighbours '.' pos = Left $ "unexpected ground at position " <> show pos
 neighbours c pos =
   Left $ "unexpected char '" <> show c <> "' at position " <> show pos
+
+-- part 2
+
+loop :: Map -> Position -> [Position]
+loop grid start = unfoldr f (start, second)
+  where
+    (_, second) = neighboursOfStart grid start
+    f (current, next)
+      | current == start = Nothing
+      | otherwise = Just $ _
