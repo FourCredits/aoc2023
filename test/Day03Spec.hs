@@ -1,7 +1,5 @@
 module Day03Spec where
 
-import Data.Function ((&))
-import Data.Functor ((<&>))
 import Day03
 import Test.Hspec
 import Utils (realInput)
@@ -12,19 +10,19 @@ spec = do
 
   describe "part 1" $ do
     it "example input" $ do
-      part1 exampleInput `shouldBe` 4361
+      part1 <$> exampleInput `shouldBe` Just 4361
 
     it "real value" $ do
-      part1 real `shouldBe` 521515
+      part1 <$> real `shouldBe` Just 521515
 
   describe "part 2" $ do
     it "example input" $ do
-      part2 exampleInput `shouldBe` 467835
+      part2 <$> exampleInput `shouldBe` Just 467835
 
     it "real value" $ do
-      part2 real `shouldBe` 69527306
+      part2 <$> real `shouldBe` Just 69527306
 
-exampleInput :: (Field, [Part], [Position])
+exampleInput :: Maybe (Field, [Part], [Position])
 exampleInput =
   parse
     "467..114..\n\

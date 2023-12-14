@@ -1,6 +1,5 @@
 module Main where
 
-import Data.Foldable (for_)
 import qualified Day01
 import qualified Day02
 import qualified Day03
@@ -16,12 +15,12 @@ import Text.Printf (printf)
 main :: IO ()
 main = for_ days $ \(dayNumber, function) -> do
   let file = printf "inputs/day%02d.txt" dayNumber
-  input <- getDataFileName file >>= readFile
+  input <- getDataFileName file >>= readFileBS <&> decodeUtf8
   let (part1, part2) = function input
   let formatString = "------\nDay %02d\n------\nPart 1: %s\nPart 2: %s\n"
   printf formatString dayNumber part1 part2
 
-type Day = (Int, String -> (String, String))
+type Day = (Int, Text -> (Text, Text))
 
 days :: [Day]
 days =

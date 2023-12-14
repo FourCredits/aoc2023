@@ -3,18 +3,12 @@
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE ViewPatterns #-}
 
-module Day05 (parse, solve, part1, part2, Map, Range (..)) where
+module Day05 (parse, solve, part1, part2, ConversionMap, Range (..)) where
 
-import Control.Applicative (asum)
-import Control.Arrow ((&&&))
-import Control.Monad (void)
-import Data.Function ((&))
-import Data.Functor ((<&>))
-import Data.List (foldl')
-import Data.Maybe (fromMaybe)
+import Data.List (minimum)
 import qualified Text.Parsec as P
 
-type Map = [Range]
+type ConversionMap = [Range]
 
 data Range = Range
   { destinationStart :: Int,
@@ -25,14 +19,14 @@ data Range = Range
 
 type Span = (Int, Int)
 
-parse :: String -> Either P.ParseError ([Int], [Map])
+parse :: Text -> Either P.ParseError ([Int], [ConversionMap])
 parse = P.parse parser ""
   where
     parser = (,) <$> (seedsP <* sep) <*> P.sepBy mapP P.newline
     seedsP = P.string "seeds: " *> intListP
     intListP = P.sepBy intP spaceP
     spaceP = P.char ' '
-    intP = P.many P.digit <&> read
+    intP = P.many P.digit >>= maybe empty pure . readMaybe
     sep = void $ P.count 2 P.newline
     mapP =
       P.many (P.satisfy (/= '\n')) *> P.newline *> P.sepEndBy rangeP P.newline
@@ -41,20 +35,17 @@ parse = P.parse parser ""
         [dS, sS, rL] -> pure $ Range dS sS rL
         _ -> fail "wrong number of numbers"
 
-solve :: String -> (String, String)
+solve :: Text -> (Text, Text)
 solve = (display . fmap part1 &&& display . fmap part2) . parse
   where
     display = either (const "parse error") show
 
-part1 :: ([Int], [Map]) -> Int
+part1 :: ([Int], [ConversionMap]) -> Int
 part1 (seeds, maps) = seeds <&> (\seed -> foldl' convert seed maps) & minimum
 
-convert :: Int -> Map -> Int
+convert :: Int -> ConversionMap -> Int
 convert source categoryMap =
-  categoryMap
-    <&> mapRange source
-    & asum
-    & fromMaybe source
+  categoryMap <&> mapRange source & asum & fromMaybe source
 
 mapRange :: Int -> Range -> Maybe Int
 mapRange source (Range {destinationStart, sourceStart, rangeLength})
@@ -62,7 +53,7 @@ mapRange source (Range {destinationStart, sourceStart, rangeLength})
       Just (destinationStart + (source - sourceStart))
   | otherwise = Nothing
 
-part2 :: ([Int], [Map]) -> Int
+part2 :: ([Int], [ConversionMap]) -> Int
 part2 (seedRanges, maps) =
   maps & foldl' convertCategory startingSpans <&> fst & minimum
   where
@@ -71,7 +62,7 @@ part2 (seedRanges, maps) =
       [] -> spans
       result -> result
 
-convertSpan :: Map -> Span -> [Span]
+convertSpan :: ConversionMap -> Span -> [Span]
 convertSpan [] inputSpan = [inputSpan]
 convertSpan ((Range dS sS rL) : rs') (l, h)
   | h < sS || l > sE = convertSpan rs' (l, h)

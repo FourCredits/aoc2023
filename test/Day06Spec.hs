@@ -25,7 +25,7 @@ spec = do
 exampleParsed :: [(Int, Int)]
 exampleParsed = [(7, 9), (15, 40), (30, 200)]
 
-exampleInput :: String
+exampleInput :: Text
 exampleInput =
   "Time:      7  15   30\n\
   \Distance:  9  40  200"

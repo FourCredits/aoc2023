@@ -37,7 +37,7 @@ exampleParsed =
     (Hand {cards = [Q, Q, Q, J, A]}, 483)
   ]
 
-exampleInput :: String
+exampleInput :: Text
 exampleInput =
   "32T3K 765\n\
   \T55J5 684\n\

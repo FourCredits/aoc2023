@@ -13,12 +13,13 @@ dependencies:
     mixin:
       - hiding (Prelude)
   relude:
+    version: ^>= 1.2.1
     mixin:
-        - hiding (Relude)
-        - (Relude as Prelude)
+      - (Relude as Prelude)
+      - ""
   array: ">= 0.5.4 && < 0.6"
-  containers: ">= 0.6.7 && < 0.7"
   parsec: ">= 3.1.16 && < 3.2"
+  containers: "^>= 0.6.7"
 
 ghc-options:
   - -Wall
@@ -28,6 +29,9 @@ ghc-options:
   - -Wincomplete-uni-patterns
   - -Wpartial-fields
   - -Wredundant-constraints
+
+default-extensions:
+  - OverloadedStrings
 
 data-files:
   - inputs/**/*
