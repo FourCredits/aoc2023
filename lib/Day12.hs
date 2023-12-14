@@ -10,22 +10,19 @@ instance Show Record where
   show Damaged = "#"
 
 part1 :: String -> Maybe Int
-part1 input = case parse input of
-  Just parsed -> Just $ sum $ map (uncurry arrangements . first records) parsed
-  Nothing -> Nothing
+part1 input = sum . map (uncurry arrangements . first records) <$> parse input
 
 arrangements :: [[Record]] -> [Int] -> Int
 arrangements rs ns = length $ filter ((== ns) . countDamages) rs
 
 countDamages :: [Record] -> [Int]
-countDamages = go [] Nothing
+countDamages = finish . foldr f ([], Nothing)
   where
-    go acc (Just current) [] = reverse (current : acc)
-    go acc Nothing [] = reverse acc
-    go acc (Just current) (Operational : rest) = go (current : acc) Nothing rest
-    go acc Nothing (Operational : rest) = go acc Nothing rest
-    go acc (Just current) (Damaged : rest) = go acc (Just (current + 1)) rest
-    go acc Nothing (Damaged : rest) = go acc (Just 1) rest
+    finish (numbers, final) = maybe numbers (: numbers) final
+    f Operational (acc, Just current) = (current : acc, Nothing)
+    f Operational (acc, Nothing) = (acc, Nothing)
+    f Damaged (acc, Just current) = (acc, Just (current + 1))
+    f Damaged (acc, Nothing) = (acc, Just 1)
 
 parse :: String -> Maybe [(String, [Int])]
 parse = traverse parseLine . lines
