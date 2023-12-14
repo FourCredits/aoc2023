@@ -1,7 +1,5 @@
 module Day10Spec where
 
-import Data.Function ((&))
-import Data.Functor ((<&>))
 import Day10 (parse, part1, part2)
 import Test.Hspec
 import Utils (realInput)
@@ -11,18 +9,18 @@ spec = do
   real <- realInput 10 & runIO <&> parse
 
   describe "part 1" $ do
-    it "example 1" $ part1 (parse example1) `shouldBe` 4
-    it "example 2" $ part1 (parse example2) `shouldBe` 8
-    it "real" $ part1 real `shouldBe` 6909
+    it "example 1" $ part1 <$> (parse example1) `shouldBe` Just 4
+    it "example 2" $ part1 <$> (parse example2) `shouldBe` Just 8
+    it "real" $ part1 <$> real `shouldBe` Just 6909
 
   describe "part 2" $ do
-    it "example 1" $ part2 (parse example1) `shouldBe` 1
-    it "example 3" $ part2 (parse example3) `shouldBe` 4
-    it "example 4" $ part2 (parse example4) `shouldBe` 8
-    it "example 5" $ part2 (parse example5) `shouldBe` 10
-    it "real" $ part2 real `shouldBe` 461
+    it "example 1" $ part2 <$> (parse example1) `shouldBe` Just 1
+    it "example 3" $ part2 <$> (parse example3) `shouldBe` Just 4
+    it "example 4" $ part2 <$> (parse example4) `shouldBe` Just 8
+    it "example 5" $ part2 <$> (parse example5) `shouldBe` Just 10
+    it "real" $ part2 <$> real `shouldBe` Just 461
 
-example1, example2, example3, example4, example5 :: String
+example1, example2, example3, example4, example5 :: Text
 example1 =
   "-L|F7\n\
   \7S-7|\n\

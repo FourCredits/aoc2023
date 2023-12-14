@@ -1,7 +1,5 @@
 module Day11Spec where
 
-import Data.Function ((&))
-import Data.Functor ((<&>))
 import qualified Data.Set as S
 import Day11
 import Test.Hspec
@@ -40,7 +38,7 @@ exampleParsed =
       {- 9 -} (9, 4)
     ]
 
-exampleInput :: String
+exampleInput :: Text
 exampleInput =
   "...#......\n\
   \.......#..\n\

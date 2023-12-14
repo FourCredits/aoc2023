@@ -45,12 +45,19 @@ library
       Day11
   hs-source-dirs:
       lib
+  default-extensions:
+      OverloadedStrings
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints
   build-depends:
       array >=0.5.4 && <0.6
     , base >=4.17.2 && <4.18
     , containers >=0.6.7 && <0.7
     , parsec >=3.1.16 && <3.2
+    , relude >=1.2.1 && <1.3
+  mixins:
+      base hiding (Prelude)
+    , relude (Relude as Prelude)
+    , relude 
   default-language: Haskell2010
 
 executable aoc2023
@@ -61,6 +68,8 @@ executable aoc2023
       Paths_aoc2023
   hs-source-dirs:
       app
+  default-extensions:
+      OverloadedStrings
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints
   build-depends:
       aoc2023
@@ -68,6 +77,11 @@ executable aoc2023
     , base >=4.17.2 && <4.18
     , containers >=0.6.7 && <0.7
     , parsec >=3.1.16 && <3.2
+    , relude >=1.2.1 && <1.3
+  mixins:
+      base hiding (Prelude)
+    , relude (Relude as Prelude)
+    , relude 
   default-language: Haskell2010
 
 test-suite spec
@@ -91,6 +105,8 @@ test-suite spec
       Paths_aoc2023
   hs-source-dirs:
       test
+  default-extensions:
+      OverloadedStrings
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints
   build-tool-depends:
       hspec-discover:hspec-discover
@@ -101,4 +117,9 @@ test-suite spec
     , containers >=0.6.7 && <0.7
     , hspec ==2.*
     , parsec >=3.1.16 && <3.2
+    , relude >=1.2.1 && <1.3
+  mixins:
+      base hiding (Prelude)
+    , relude (Relude as Prelude)
+    , relude 
   default-language: Haskell2010

@@ -1,26 +1,26 @@
 module Day06 (solve, part1, part2) where
 
-import Control.Arrow ((&&&))
 import Data.Char (isDigit)
-import Data.Function ((&))
-import Data.Functor ((<&>))
+import qualified Data.Text as T
 
-solve :: String -> (String, String)
+solve :: Text -> (Text, Text)
 solve = (maybe "error" show . part1) &&& (maybe "error" show . part2)
 
-parse1 :: String -> Maybe [(Int, Int)]
+parse1 :: Text -> Maybe [(Int, Int)]
 parse1 input = case input & lines <&> toNumbers of
   [times, distances] -> pure $ zip times distances
-  _ -> fail "wrong number of lines"
+  _ -> empty
   where
-    toNumbers = map read . filter (all isDigit) . words
+    toNumbers = mapMaybe (readMaybe . toString) . filter (T.all isDigit) . words
 
-parse2 :: String -> Maybe (Int, Int)
-parse2 input = case input & lines <&> read . filter isDigit of
+parse2 :: Text -> Maybe (Int, Int)
+parse2 input = case input & lines & mapMaybe toNumbers of
   [time, distance] -> pure (time, distance)
-  _ -> fail "wront number of lines"
+  _ -> empty
+  where
+    toNumbers = readMaybe . filter isDigit . toString
 
-part1, part2 :: String -> Maybe Int
+part1, part2 :: Text -> Maybe Int
 part1 input = (input & parse1) <&> product . map waysToWin
 part2 input = input & parse2 <&> waysToWin
 

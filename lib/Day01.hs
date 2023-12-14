@@ -1,21 +1,19 @@
 module Day01 (solve, part1, part2) where
 
-import Data.Function ((&))
-import Data.Functor ((<&>))
-import Data.List (find, tails)
-import Data.Maybe (mapMaybe)
+import qualified Data.Text as T
 
-solve :: String -> (String, String)
+solve :: Text -> (Text, Text)
 solve input =
   let calibrationLines = lines input
+      display :: Maybe Int -> Text
       display = maybe "a line had no numbers on it" show
    in (display $ part1 calibrationLines, display $ part2 calibrationLines)
 
-part1, part2 :: [String] -> Maybe Int
+part1, part2 :: [Text] -> Maybe Int
 part1 = extractCalibrationValue digits
 part2 = extractCalibrationValue digitsAndWords
 
-digits, digitsAndWords :: [(String, Int)]
+digits, digitsAndWords :: [(Text, Int)]
 digits =
   [ ("1", 1),
     ("2", 2),
@@ -40,16 +38,15 @@ digitsAndWords =
          ("nine", 9)
        ]
 
-extractCalibrationValue :: [(String, Int)] -> [String] -> Maybe Int
+extractCalibrationValue :: [(Text, Int)] -> [Text] -> Maybe Int
 extractCalibrationValue numbers =
-  fmap sum . traverse (firstAndLast . splitBy numbers)
+  fmap sum . traverse (viaNonEmpty firstAndLast . splitBy numbers)
 
-splitBy :: [(String, Int)] -> String -> [Int]
-splitBy numbers input = input & tails & mapMaybe extractFromStart
+splitBy :: [(Text, Int)] -> Text -> [Int]
+splitBy numbers input = input & T.tails & mapMaybe extractFromStart
   where
     extractFromStart substring = numbers & find (matches substring) <&> snd
-    matches substring (term, _) = term == take (length term) substring
+    matches substring (term, _) = term == T.take (T.length term) substring
 
-firstAndLast :: [Int] -> Maybe Int
-firstAndLast [] = Nothing
-firstAndLast numbers = Just $ head numbers * 10 + last numbers
+firstAndLast :: NonEmpty Int -> Int
+firstAndLast numbers = head numbers * 10 + last numbers
