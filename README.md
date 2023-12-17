@@ -13,8 +13,8 @@
 - [x] publish
 - [x] rename `src` to `lib`
 - [x] use the `Paths_` and data files to store the input files
-- [ ] use `Text` rather than `String`?
-- [ ] experiment with using the `relude`?
+- [x] use `Text` rather than `String`?
+- [x] experiment with using the `relude`?
 - [x] format
 - [x] fix failing test for day 2
 - [x] clean-up day 3
