@@ -1,7 +1,5 @@
 module Day01Spec where
 
-import Data.Function ((&))
-import Data.Functor ((<&>))
 import Day01
 import Test.Hspec
 import Utils (realInput)
@@ -24,7 +22,7 @@ spec = do
     it "gives the correct answer for real input" $ do
       part2 real `shouldBe` Just 54249
 
-part1Example :: [String]
+part1Example :: [Text]
 part1Example =
   lines
     "1abc2\n\
@@ -32,7 +30,7 @@ part1Example =
     \a1b2c3d4e5f\n\
     \treb7uchet"
 
-part2Example :: [String]
+part2Example :: [Text]
 part2Example =
   lines
     "two1nine\n\

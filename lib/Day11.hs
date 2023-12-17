@@ -3,21 +3,17 @@
 
 module Day11 (part1, part2, parse, Galaxy, solve, distances) where
 
-import Control.Arrow ((&&&))
-import Control.Monad (guard)
-import Data.Function ((&))
-import Data.List (foldl')
 import qualified Data.Set as S
 
 type Galaxy = (Int, Int)
 
-solve :: String -> (String, String)
+solve :: Text -> (Text, Text)
 solve = (show . part1 &&& show . part2) . parse
 
-parse :: String -> S.Set Galaxy
+parse :: Text -> S.Set Galaxy
 parse input = S.fromList $ do
   (rowIndex, rowString) <- zip [0 ..] $ lines input
-  (columnIndex, character) <- zip [0 ..] rowString
+  (columnIndex, character) <- zip [0 ..] $ toString rowString
   guard $ character == '#'
   pure (rowIndex, columnIndex)
 

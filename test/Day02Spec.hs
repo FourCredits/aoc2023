@@ -1,8 +1,6 @@
 module Day02Spec where
 
 import Control.Arrow (left)
-import Data.Function ((&))
-import Data.Functor ((<&>))
 import Day02
 import Test.Hspec
 import Utils (realInput)
@@ -25,7 +23,7 @@ spec = do
     it "gives the correct answer for real input" $ do
       part2 <$> real `shouldBe` Right 67953
 
-exampleInput :: Either String [Game]
+exampleInput :: Either Text [Game]
 exampleInput =
   left show $
     parseInput

@@ -1,9 +1,7 @@
 module Day08Spec where
 
 import Data.Array (listArray)
-import Data.Function ((&))
-import Data.Functor ((<&>))
-import Data.Map (fromList)
+import qualified Data.Map as M
 import Day08
 import Test.Hspec
 import Utils (realInput)
@@ -42,7 +40,7 @@ spec = do
 exampleParsed1, exampleParsed2, exampleParsed3 :: Input
 exampleParsed1 =
   ( listArray (0, 1) [R, L],
-    fromList
+    M.fromList
       [ ("AAA", ("BBB", "CCC")),
         ("BBB", ("DDD", "EEE")),
         ("CCC", ("ZZZ", "GGG")),
@@ -74,7 +72,7 @@ exampleParsed3 =
       ]
   )
 
-exampleInput1, exampleInput2, exampleInput3 :: String
+exampleInput1, exampleInput2, exampleInput3 :: Text
 exampleInput1 =
   "RL\n\
   \\n\

@@ -1,7 +1,5 @@
 module Day09Spec where
 
-import Data.Function ((&))
-import Data.Functor ((<&>))
 import Day09
 import Test.Hspec
 import Utils (realInput)
@@ -24,7 +22,7 @@ spec = do
     it "real" $ do
       (real >>= part2) `shouldBe` Just 973
 
-exampleInput :: String
+exampleInput :: Text
 exampleInput =
   "0 3 6 9 12 15\n\
   \1 3 6 10 15 21\n\

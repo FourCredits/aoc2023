@@ -2,27 +2,24 @@
 
 module Day07 (solve, parse, Card (..), Hand (..), HandType, part1, part2) where
 
-import Control.Applicative (asum)
-import Control.Arrow ((&&&))
-import Data.Function (on, (&))
-import Data.Functor (($>), (<&>))
-import Data.List (group, maximumBy, partition, sort, sortOn)
-import Data.Ord (comparing)
+import Data.List (maximumBy, partition)
+import qualified Data.List.NonEmpty as NE
 import qualified Text.Parsec as P
 
 -- common
 
-solve :: String -> (String, String)
+solve :: Text -> (Text, Text)
 solve = ((display . fmap part1) &&& (display . fmap part2)) . parse
   where
     display = either (const "parse error") show
 
-parse :: String -> Either P.ParseError [(Hand, Int)]
+parse :: Text -> Either P.ParseError [(Hand, Int)]
 parse = P.parse parser ""
   where
     parser = P.sepEndBy handAndBidP P.newline
     handAndBidP = (,) <$> handP <*> (P.space *> intP)
-    handP = P.many cardP <&> Hand
+    intP = P.many P.digit >>= maybe empty pure . readMaybe
+    handP = P.count 5 cardP <&> Hand
     cardP = asum $ map makeCard cardMappings
     makeCard (character, card) = P.char character $> card
     cardMappings =
@@ -40,7 +37,6 @@ parse = P.parse parser ""
         ('3', Three),
         ('2', Two)
       ]
-    intP = P.many P.digit <&> read
 
 -- part 1: without jokers
 
@@ -88,7 +84,7 @@ handType = go . sort . map length . group . sort . cards
     go _ = error "invalid hand"
 
 part1 :: [(Hand, Int)] -> Int
-part1 = sum . zipWith winnings [1 ..] . sortOn fst
+part1 = sum . zipWith winnings [1 ..] . sortWith fst
 
 winnings :: Int -> (a, Int) -> Int
 winnings rank (_, bet) = bet * rank
@@ -114,17 +110,15 @@ instance Ord HandWithJokers where
 
 handTypeWithJokers :: HandWithJokers -> HandType
 handTypeWithJokers (HandWithJokers hand) =
-  maybe hand ((<> others) . replicate (length jokers)) (mode others)
-    & map getCard
-    & Hand
-    & handType
+  maybe hand replaceJokers (viaNonEmpty mode others) & toHand & handType
   where
+    toHand = Hand . map getCard
+    replaceJokers = (<> others) . replicate (length jokers)
     (jokers, others) = partition ((== J) . getCard) hand
 
-mode :: (Ord a) => [a] -> Maybe a
-mode [] = Nothing
+mode :: (Ord a) => NonEmpty a -> a
 mode elements =
-  elements & sort & group & maximumBy (comparing length) & head & Just
+  elements & NE.sort & NE.group1 & maximumBy (comparing length) & head
 
 handWithJokers :: Hand -> HandWithJokers
 handWithJokers = HandWithJokers . map CardWithJokers . cards

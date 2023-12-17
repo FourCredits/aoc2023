@@ -4,9 +4,6 @@
 module Day04 (solve, part1, part2, parse, Card (..)) where
 
 import Data.Array
-import Data.Foldable (foldl')
-import Data.Function ((&))
-import Data.Functor ((<&>))
 import qualified Data.Set as S
 import qualified Text.Parsec as P
 
@@ -16,18 +13,18 @@ data Card = Card
   }
   deriving (Show, Eq)
 
-solve :: String -> (String, String)
+solve :: Text -> (Text, Text)
 solve input = case parse input of
   Right cards -> (show $ part1 cards, show $ part2 cards)
   _ -> ("parse error", "parse error")
 
-parse :: String -> Either P.ParseError [Card]
+parse :: Text -> Either P.ParseError [Card]
 parse = P.parse (P.sepEndBy gameP P.newline) ""
   where
     gameP = Card <$> winningP <*> presentP
     winningP = P.string "Card " *> intP *> P.string ": " *> setP
     presentP = P.string "| " *> setP
-    intP = P.many P.space *> P.many1 P.digit <&> read
+    intP = P.many P.space *> P.many1 P.digit >>= maybe empty pure . readMaybe
     setP = P.sepEndBy intP (P.char ' ') <&> S.fromList
 
 part1 :: [Card] -> Int

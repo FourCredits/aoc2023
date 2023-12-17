@@ -22,7 +22,7 @@ spec = do
     it "example input" $ part2 exampleParsed `shouldBe` 46
     it "real" $ (real <&> part2) `shouldBe` Right 79004094
 
-exampleInput :: String
+exampleInput :: Text
 exampleInput =
   "seeds: 79 14 55 13\n\
   \\n\
@@ -58,7 +58,7 @@ exampleInput =
   \60 56 37\n\
   \56 93 4"
 
-exampleParsed :: ([Int], [Map])
+exampleParsed :: ([Int], [ConversionMap])
 exampleParsed =
   ( [79, 14, 55, 13],
     [ [ Range {destinationStart = 50, sourceStart = 98, rangeLength = 2},

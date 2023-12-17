@@ -1,40 +1,38 @@
 module Day10 (part1, part2, solve, parse) where
 
-import Control.Arrow ((&&&))
 import Data.Array (Array, Ix (inRange), assocs, bounds, listArray, (!), (//))
-import Data.Bifunctor (Bifunctor (bimap))
-import Data.Foldable (Foldable (toList))
-import Data.Function ((&))
-import Data.List (find)
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.Maybe (fromJust)
+import qualified Data.Text as T
 
 type Position = (Int, Int)
 
-type Map = Array Position Char
+type PipeMap = Array Position Char
 
-type Input = (Map, Position)
+type Input = (PipeMap, Position)
 
-solve :: String -> (String, String)
-solve = ((show . part1) &&& (show . part2)) . parse
+solve :: Text -> (Text, Text)
+solve = (display part1 &&& display part2) . parse
+  where
+    display f = maybe "parse error" (show . f)
 
 -- TODO: make a type for positions, instead of using characters
-parse :: String -> Input
-parse input =
-  let grid = constructMap input
-      start = findStart grid
-   in (replaceStart grid start, start)
+parse :: Text -> Maybe Input
+parse input = do
+  grid <- constructMap input
+  let start = findStart grid
+  pure (replaceStart grid start, start)
 
-constructMap :: String -> Map
-constructMap input = listArray ((0, 0), (r - 1, c - 1)) $ filter (/= '\n') input
-  where
-    r = length $ lines input
-    c = length $ head $ lines input
+constructMap :: Text -> Maybe PipeMap
+constructMap input = do
+  let r = length $ lines input
+  c <- viaNonEmpty (T.length . head) (lines input)
+  pure $ listArray ((0, 0), (r - 1, c - 1)) $ filter (/= '\n') $ toString input
 
-findStart :: Map -> Position
+findStart :: PipeMap -> Position
 findStart = fst . fromJust . find ((== 'S') . snd) . assocs
 
-replaceStart :: Map -> Position -> Map
+replaceStart :: PipeMap -> Position -> PipeMap
 replaceStart grid start@(r, c) = grid // [(start, replacement)]
   where
     replacement = case map isNeighbour allNeighbours of
@@ -83,7 +81,7 @@ part2 :: Input -> Int
 part2 (grid, start) = areaOfLoop vertices - (length points `div` 2) + 1
   where
     points = getPoints grid start
-    vertices = filter ((`elem` "F7JL") . (grid !)) points
+    vertices = filter ((`T.elem` "F7JL") . (grid !)) points
 
 -- the shoelace theorem: find the area of a space by representing it as the sum
 -- of signed areas of trapezoids. see here for more:
@@ -98,10 +96,10 @@ areaOfLoop vertices = [1 .. len] & map trapezoid & sum & (`div` 2) & abs
     len = length vertices
     toArray = listArray (0, len - 1)
 
-getPoints :: Map -> Position -> [Position]
-getPoints grid start = NonEmpty.unfoldr f (False, start, second) & toList
+getPoints :: PipeMap -> Position -> [Position]
+getPoints grid start = NonEmpty.unfoldr f (False, start, afterStart) & toList
   where
-    (_, second) = neighbours (grid ! start) start
+    (_, afterStart) = neighbours (grid ! start) start
     f (doneWithStart, current, next)
       | next == start && doneWithStart = (current, Nothing)
       | otherwise = (current, pure (True, next, next'))
