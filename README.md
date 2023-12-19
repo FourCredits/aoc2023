@@ -20,3 +20,6 @@
 - [x] clean-up day 3
 - [ ] extract out common threads (e.g. int parser)
 - [x] optimise and tidy day 7, especially part 2
+- [ ] use `context` more often in tests, compared to how much i use `describe`
+- [ ] make tests run in parallel
+- [ ] use `focus` from hspec to control what gets run
