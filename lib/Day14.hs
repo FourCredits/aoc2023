@@ -1,18 +1,38 @@
 {-# LANGUAGE NamedFieldPuns #-}
 
-module Day14 (parse, part1) where
+module Day14 (parse, part1, solve, part2) where
 
 import Data.List (partition)
+import qualified Data.Map as M
 import qualified Data.Set as S
+import qualified Data.Text as T
 
 type Pos = (Int, Int)
 
-solve :: Text -> (Text, Text)
-solve = (show . part1 &&& undefined) . parse
+data RockState = RockState
+  { cubicRocks :: S.Set Pos,
+    settled :: S.Set Pos,
+    numberOfRows :: Int,
+    numberOfColumns :: Int
+  }
+  deriving (Show, Eq)
 
-parse :: Text -> (Int, S.Set Pos, S.Set Pos)
-parse input = (length $ lines input, rounded, cubic)
+solve :: Text -> (Text, Text)
+solve = (display part1 &&& display part2) . parse
   where
+    display f = maybe "parse error" (show . f)
+
+parse :: Text -> Maybe RockState
+parse input =
+  columns <&> \c ->
+    RockState
+      { cubicRocks = cubic,
+        settled = rounded,
+        numberOfRows = length (lines input),
+        numberOfColumns = c
+      }
+  where
+    columns = viaNonEmpty (T.length . head) (lines input)
     (rounded, cubic) = bimap toSet toSet $ partition fst rocks
     rocks = mapMaybe extractRock $ enumerateField input
     extractRock (position, 'O') = pure (True, position)
@@ -26,25 +46,62 @@ enumerateField input = do
   (columnNumber, cell) <- zip [0 ..] $ toString row
   pure ((rowNumber, columnNumber), cell)
 
-part1 :: (Int, S.Set Pos, S.Set Pos) -> Int
-part1 (rows, rounded, cubic) =
-  power $ S.foldl' rollNorthward (start cubic rows) rounded
+part1 :: RockState -> Int
+part1 = power . tilt north
 
-data Part1State = Part1State
-  {unmovables :: S.Set Pos, power :: Int, numberOfRows :: Int}
-  deriving (Show, Eq)
+tilt :: (Ord a) => (Pos -> Pos, Pos -> a) -> RockState -> RockState
+tilt (direction, ordering) currentState@(RockState {settled}) =
+  settled
+    & toList
+    & sortWith ordering
+    & foldl' (roll direction) (currentState {settled = S.empty})
 
-start :: S.Set Pos -> Int -> Part1State
-start cubicRocks numberOfRows =
-  Part1State {unmovables = cubicRocks, power = 0, numberOfRows}
-
-rollNorthward :: Part1State -> Pos -> Part1State
-rollNorthward state@(Part1State {unmovables}) pos@(r, c)
-  | r' < 0 || S.member north unmovables = add pos state
-  | otherwise = rollNorthward state north
+roll :: (Pos -> Pos) -> RockState -> Pos -> RockState
+roll direction currentState@(RockState {cubicRocks, settled}) pos
+  | outOfBounds currentState next || alreadyTaken =
+      currentState {settled = S.insert pos settled}
+  | otherwise = roll direction currentState next
   where
-    north@(r', _) = (r - 1, c)
+    alreadyTaken = S.member next cubicRocks || S.member next settled
+    next = direction pos
 
-add :: Pos -> Part1State -> Part1State
-add pos@(r, _) state@(Part1State {unmovables, power, numberOfRows}) =
-  state {unmovables = S.insert pos unmovables, power = power + numberOfRows - r}
+outOfBounds :: RockState -> Pos -> Bool
+outOfBounds (RockState {numberOfRows, numberOfColumns}) (r, c) =
+  r < 0 || r >= numberOfRows || c < 0 || c >= numberOfColumns
+
+north, west :: (Pos -> Pos, Pos -> Int)
+north = (\(r, c) -> (r - 1, c), fst)
+west = (\(r, c) -> (r, c - 1), snd)
+
+south, east :: (Pos -> Pos, Pos -> Reverse Int)
+south = (\(r, c) -> (r + 1, c), Reverse . fst)
+east = (\(r, c) -> (r, c + 1), Reverse . snd)
+
+newtype Reverse a = Reverse {getReverse :: a} deriving (Eq, Show)
+
+instance (Ord a) => Ord (Reverse a) where
+  (Reverse a) <= (Reverse b) = b <= a
+
+power :: RockState -> Int
+power (RockState {settled, numberOfRows}) =
+  S.foldl' (\acc (r, _) -> acc + numberOfRows - r) 0 settled
+
+-- part 2
+
+part2 :: RockState -> Int
+part2 = go M.empty 0
+  where
+    go seen iteration rockState = case seen M.!? settled rockState of
+      Just prev
+        | (s : _) <- M.keys (M.filter (== indexOfTarget prev iteration) seen) ->
+            power (rockState {settled = s})
+        | otherwise -> error "oopsie daisies"
+      Nothing ->
+        let seen' = M.insert (settled rockState) iteration seen
+         in go seen' (iteration + 1) (tiltCycle rockState)
+    indexOfTarget start end = start + ((target - end) `mod` (end - start))
+    target = 1000000000 :: Int
+
+tiltCycle :: RockState -> RockState
+tiltCycle currentState =
+  currentState & tilt north & tilt west & tilt south & tilt east
