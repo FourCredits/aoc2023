@@ -27,6 +27,8 @@ data-files:
     inputs/day11.txt
     inputs/day12.txt
     inputs/day13.txt
+    inputs/day14.txt
+    inputs/day15.txt
 
 source-repository head
   type: git
@@ -48,6 +50,7 @@ library
       Day12
       Day13
       Day14
+      Day15
   hs-source-dirs:
       lib
   default-extensions:
@@ -107,6 +110,7 @@ test-suite spec
       Day12Spec
       Day13Spec
       Day14Spec
+      Day15Spec
       Utils
       Paths_aoc2023
   autogen-modules:
