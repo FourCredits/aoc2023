@@ -1,4 +1,4 @@
-module Day16 (parse, part1, solve) where
+module Day16 (parse, part1, solve, part2) where
 
 import Data.Array (Array, bounds, inRange, listArray, (!))
 import Data.Char (isSpace)
@@ -11,14 +11,15 @@ data Tile
   | SplitHorizontal
   | ForwardMirror
   | BackwardMirror
-  deriving (Show)
 
 data Direction = L | R | U | D deriving (Eq, Ord, Show)
 
 type Pos = (Int, Int)
 
 solve :: Text -> (Text, Text)
-solve = (maybe "parse error" (show . part1) &&& error "unimplemented") . parse
+solve = (display part1 &&& display part2) . parse
+  where
+    display f = maybe "parse error" (show . f)
 
 parse :: Text -> Maybe (Array Pos Tile)
 parse input = do
@@ -37,24 +38,12 @@ parse input = do
       & traverse (traverse char . toString)
   pure $ listArray ((0, 0), (rows - 1, c - 1)) (concat tiles)
 
--- part1 :: Array Pos Tile -> Int
--- part1 layout = S.size $ S.map fst $ go (0, 0) R S.empty
---   where
---     go pos direction cache
---       | S.member (pos, direction) cache || not (inRange mapBounds pos) = cache
---       | otherwise = case layout ! pos of
---           SplitVertical | direction `elem` [L, R] -> S.union (move U) (move D)
---           SplitHorizontal | direction `elem` [U, D] -> S.union (move L) (move R)
---           ForwardMirror -> move (forwardMirror direction)
---           BackwardMirror -> move (backwardMirror direction)
---           _ -> move direction
---       where
---         cache' = S.insert (pos, direction) cache
---         move dir = go (next dir pos) dir cache'
---     mapBounds = bounds layout
-
 part1 :: Array Pos Tile -> Int
-part1 layout = S.size $ S.map fst $ execState (go (0, 0) R) S.empty
+part1 layout = energization layout (0, 0) R
+
+energization :: Array Pos Tile -> Pos -> Direction -> Int
+energization layout startPos startDirection =
+  S.size $ S.map fst $ execState (go startPos startDirection) S.empty
   where
     go :: Pos -> Direction -> State (Set (Pos, Direction)) ()
     go pos direction = do
@@ -88,3 +77,15 @@ next U (r, c) = (r - 1, c)
 next D (r, c) = (r + 1, c)
 next L (r, c) = (r, c - 1)
 next R (r, c) = (r, c + 1)
+
+part2 :: Array Pos Tile -> Int
+part2 layout =
+  let ((lowR, lowC), (highR, highC)) = bounds layout
+   in foldl' max minBound $
+        map (uncurry (energization layout)) $
+          concat
+            [ [((r, lowC), R) | r <- [lowR .. highR]],
+              [((r, highC), L) | r <- [lowR .. highR]],
+              [((lowR, c), D) | c <- [lowC .. highC]],
+              [((highR, c), U) | c <- [lowC .. highC]]
+            ]
