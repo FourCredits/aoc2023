@@ -25,3 +25,4 @@
 - [ ] use `focus` from hspec to control what gets run
 - [ ] optimise day 14 part 2 to run a little quicker
 - [ ] use `#` across the whole library
+- [ ] optimise day 16 part 2 - probably involves repeating less work
