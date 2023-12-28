@@ -8,10 +8,12 @@ spec :: Spec
 spec = do
   context "example" $ do
     it "part 1" $ (exampleInput & parse >>= part1) `shouldBe` Just 102
+    it "part 2" $ (exampleInput & parse >>= part2) `shouldBe` Just 94
 
   context "real" $ do
     real <- realInput 17 & runIO <&> parse
     it "part 1" $ (real >>= part1) `shouldBe` Just 694
+    it "part 2" $ (real >>= part2) `shouldBe` Just 829
 
 exampleInput :: Text
 exampleInput =
