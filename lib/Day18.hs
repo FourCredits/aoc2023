@@ -1,36 +1,39 @@
-module Day18 (parse, part1, Instruction (..), Direction (..)) where
+module Day18 (part1, part2, Instruction (..), Direction (..)) where
 
-import Data.Array (inRange, range)
-import Data.Char (isDigit)
-import Data.List (maximum, minimum, (\\))
-import qualified Data.Set as S
+import Data.Array (listArray, (!))
+import Data.Char (isHexDigit)
 import qualified Text.Parsec as P
 
 data Direction = D | U | L | R deriving (Show, Eq)
 
-type ColorChannel = Int
-
-data Instruction
-  = Instruction Direction Int ColorChannel ColorChannel ColorChannel
-  deriving (Show, Eq)
+data Instruction = Instruction Direction Int deriving (Show, Eq)
 
 type Pos = (Int, Int)
 
-parse :: Text -> Either P.ParseError [Instruction]
-parse = P.parse (P.sepEndBy instruction P.newline) ""
+part1 :: Text -> Either P.ParseError Int
+part1 = fmap areaOfLagoon . P.parse (P.sepEndBy instruction P.newline) ""
   where
     instruction = do
       d <- direction
       distance <- P.char ' ' *> int
-      (r, g, b) <- P.char ' ' *> P.between (P.char '(') (P.char ')') color
-      pure $ Instruction d distance r g b
-    color =
-      P.char '#' *> ((,,) <$> colorChannel <*> colorChannel <*> colorChannel)
+      _ <- P.string " (#" *> P.count 6 (P.satisfy isHexDigit) *> P.char ')'
+      pure $ Instruction d distance
     direction =
       asum [P.char 'D' $> D, P.char 'U' $> U, P.char 'L' $> L, P.char 'R' $> R]
-    int = P.many (P.satisfy isDigit) >>= parseInt
-    colorChannel = combineHexDigits <$> P.count 2 hexDigit
+    int = P.many P.digit >>= parseInt
     parseInt = maybe (fail "failed to parse int") pure . readMaybe
+
+part2 :: Text -> Either P.ParseError Int
+part2 = fmap areaOfLagoon . P.parse (P.sepEndBy instruction P.newline) ""
+  where
+    instruction = do
+      _ <- P.oneOf "DULR" *> P.char ' ' *> P.many1 P.digit *> P.string " (#"
+      distance <- combineHexDigits <$> P.count 5 hexDigit
+      d <- direction
+      _ <- P.char ')'
+      pure $ Instruction d distance
+    direction =
+      asum [P.char '0' $> R, P.char '1' $> D, P.char '2' $> L, P.char '3' $> U]
     combineHexDigits = foldl' (\acc c -> acc * 16 + c) 0
     hexDigit =
       asum
@@ -58,52 +61,31 @@ parse = P.parse (P.sepEndBy instruction P.newline) ""
           P.char 'f' $> 15
         ]
 
--- TODO: does that work?
-part1 :: [Instruction] -> Int
-part1 = S.size . fillIn . fst . foldl' f (one (0, 0), (0, 0))
+areaOfLagoon :: [Instruction] -> Int
+areaOfLagoon instructions =
+  areaOfLoop points - (boundary `div` 2) + 1 + boundary
   where
-    f (boundary, position) (Instruction dir distance _ _ _) =
-      let newPositions = move position dir distance
-          boundary' = foldr S.insert boundary newPositions
-          position' = fromMaybe position $ viaNonEmpty last newPositions
-       in (boundary', position')
+    (points, boundary, _) = foldl' f ([], 0, (0, 0)) instructions
+    f (points_, boundary_, pos) (Instruction dir dist) =
+      (pos : points_, boundary_ + genericLength (move pos dir dist), nextPoint dir dist pos)
+    nextPoint D dist (r, c) = (r + dist, c)
+    nextPoint U dist (r, c) = (r - dist, c)
+    nextPoint L dist (r, c) = (r, c - dist)
+    nextPoint R dist (r, c) = (r, c + dist)
+
+-- copied over from day 10. TODO: extract to somewhere common
+areaOfLoop :: [Pos] -> Int
+areaOfLoop vertices = [1 .. len] & map trapezoid & sum & (`div` 2) & abs
+  where
+    trapezoid i = (r i + r (i + 1)) * (c i - c (i + 1))
+    (rows, columns) = bimap toArray toArray $ unzip vertices
+    r i = rows ! (i `mod` len)
+    c i = columns ! (i `mod` len)
+    len = length vertices
+    toArray = listArray (0, len - 1)
 
 move :: (Int, Int) -> Direction -> Int -> [(Int, Int)]
 move (r, c) D distance = [(r', c) | r' <- [r + 1 .. r + distance]]
 move (r, c) U distance = [(r', c) | r' <- [r - 1, r - 2 .. r - distance]]
 move (r, c) L distance = [(r, c') | c' <- [c - 1, c - 2 .. c - distance]]
 move (r, c) R distance = [(r, c') | c' <- [c + 1 .. c + distance]]
-
-fillIn :: Set Pos -> Set Pos
-fillIn boundary =
-  bounds
-    & range
-    & (\\ toList boundary)
-    & map (tryFill bounds boundary)
-    & asum
-    & fromMaybe boundary
-  where
-    bounds = extrema boundary
-
-tryFill :: (Pos, Pos) -> Set Pos -> Pos -> Maybe (Set Pos)
-tryFill bounds boundary current = go False boundary [current]
-  where
-    go touchedEdge filledIn [] =
-      if not touchedEdge then Just filledIn else Nothing
-    go touchedEdge filledIn (p : ps)
-      | S.member p filledIn = go touchedEdge filledIn ps
-      | not (inRange bounds p) = go True filledIn ps
-      | otherwise =
-          let newPositions = filter (`S.notMember` filledIn) (neighbours p)
-           in go touchedEdge (S.insert p filledIn) (newPositions <> ps)
-
-neighbours :: Pos -> [Pos]
-neighbours (r, c) = [(r - 1, c), (r + 1, c), (r, c - 1), (r, c + 1)]
-
-extrema :: Set Pos -> (Pos, Pos)
-extrema boundary = ((lowR, lowC), (highR, highC))
-  where
-    lowR = minimum $ S.map fst boundary
-    highR = maximum $ S.map fst boundary
-    lowC = minimum $ S.map snd boundary
-    highC = maximum $ S.map snd boundary
