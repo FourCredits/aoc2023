@@ -1,4 +1,4 @@
-module Day18 (part1, part2, Instruction (..), Direction (..)) where
+module Day18 (part1, part2, Instruction (..), Direction (..), solve) where
 
 import Data.Array (listArray, (!))
 import Data.Char (isHexDigit)
@@ -9,6 +9,11 @@ data Direction = D | U | L | R deriving (Show, Eq)
 data Instruction = Instruction Direction Int deriving (Show, Eq)
 
 type Pos = (Int, Int)
+
+solve :: Text -> (Text, Text)
+solve = display part1 &&& display part2
+  where
+    display f = either (const "parse error") show . f
 
 part1 :: Text -> Either P.ParseError Int
 part1 = fmap areaOfLagoon . P.parse (P.sepEndBy instruction P.newline) ""
@@ -62,12 +67,11 @@ part2 = fmap areaOfLagoon . P.parse (P.sepEndBy instruction P.newline) ""
         ]
 
 areaOfLagoon :: [Instruction] -> Int
-areaOfLagoon instructions =
-  areaOfLoop points - (boundary `div` 2) + 1 + boundary
+areaOfLagoon instructions = areaOfLoop points - (border `div` 2) + 1 + border
   where
-    (points, boundary, _) = foldl' f ([], 0, (0, 0)) instructions
-    f (points_, boundary_, pos) (Instruction dir dist) =
-      (pos : points_, boundary_ + genericLength (move pos dir dist), nextPoint dir dist pos)
+    ((border, _), points) = mapAccumL f (0, (0, 0)) instructions
+    f (boundary, pos) (Instruction dir dist) =
+      ((boundary + dist, nextPoint dir dist pos), pos)
     nextPoint D dist (r, c) = (r + dist, c)
     nextPoint U dist (r, c) = (r - dist, c)
     nextPoint L dist (r, c) = (r, c - dist)
@@ -83,9 +87,3 @@ areaOfLoop vertices = [1 .. len] & map trapezoid & sum & (`div` 2) & abs
     c i = columns ! (i `mod` len)
     len = length vertices
     toArray = listArray (0, len - 1)
-
-move :: (Int, Int) -> Direction -> Int -> [(Int, Int)]
-move (r, c) D distance = [(r', c) | r' <- [r + 1 .. r + distance]]
-move (r, c) U distance = [(r', c) | r' <- [r - 1, r - 2 .. r - distance]]
-move (r, c) L distance = [(r, c') | c' <- [c - 1, c - 2 .. c - distance]]
-move (r, c) R distance = [(r, c') | c' <- [c + 1 .. c + distance]]
