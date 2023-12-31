@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE NamedFieldPuns #-}
 
 module Day19
@@ -18,7 +20,7 @@ import qualified Data.Map as M
 import qualified Text.Parsec as P
 
 data Input = Input
-  { workflows :: [Workflow],
+  { workflows :: Map Label Workflow,
     parts :: [Part]
   }
   deriving (Show, Eq)
@@ -26,14 +28,18 @@ data Input = Input
 type Label = Text
 
 data Workflow = Workflow
-  { name :: Label,
+  { workflowLabel :: Label,
     conditionalRules :: [ConditionalRule],
     unconditionalRule :: UnconditionalRule
   }
   deriving (Show, Eq)
 
-data ConditionalRule
-  = Conditional Category Relation Int Label
+data ConditionalRule = Conditional
+  { category :: Category,
+    relation :: Relation,
+    value :: Int,
+    goto :: Label
+  }
   deriving (Show, Eq)
 
 newtype UnconditionalRule = Unconditional {label :: Label} deriving (Show, Eq)
@@ -47,40 +53,40 @@ type Rating = Int
 data Part = Part {x :: Rating, m :: Rating, a :: Rating, s :: Rating}
   deriving (Show, Eq)
 
-data PartConstraint = PartConstraint
-  { position :: Label,
-    xConstraint :: (Rating, Rating),
-    mConstraint :: (Rating, Rating),
-    aConstraint :: (Rating, Rating),
-    sConstraint :: (Rating, Rating)
+data Range = Range
+  { rangeLabel :: Label,
+    xRange :: (Rating, Rating),
+    mRange :: (Rating, Rating),
+    aRange :: (Rating, Rating),
+    sRange :: (Rating, Rating)
   }
 
 parse :: Text -> Either P.ParseError Input
 parse = P.parse (Input <$> workflows <*> (P.newline *> parts)) ""
   where
     workflows =
-      P.sepEndBy workflow P.newline & mfilter (isJust . find ((== "in") . name))
+      P.sepEndBy workflow P.newline
+        & mfilter (isJust . find ((== "in") . workflowLabel))
+        & fmap (M.fromList . map (workflowLabel &&& id))
     workflow = do
-      name <- label
+      workflowLabel <- label
       _ <- P.char '{'
       conditionalRules <- P.sepEndBy (P.try conditionalRule) (P.char ',')
       unconditionalRule <- Unconditional <$> label
       _ <- P.char '}'
-      pure Workflow {name, conditionalRules, unconditionalRule}
+      pure Workflow {workflowLabel, conditionalRules, unconditionalRule}
     label = toText <$> P.many P.letter
     conditionalRule =
       Conditional <$> category <*> relation <*> int <*> (P.char ':' *> label)
-    category =
-      asum [P.char 'x' $> X, P.char 'm' $> M, P.char 'a' $> A, P.char 's' $> S]
-    relation = asum [P.char '<' $> Lt, P.char '>' $> Gt]
+    category = charToVariant [('x', X), ('m', M), ('a', A), ('s', S)]
+    relation = charToVariant [('<', Lt), ('>', Gt)]
+    charToVariant pairs = asum $ map (\(c, v) -> P.char c $> v) pairs
     parts = P.sepEndBy part P.newline
     part =
-      P.between
-        (P.char '{')
-        (P.char '}')
-        (P.sepBy1 rating (P.char ',') >>= listToQuad Part)
-    listToQuad f [t, u, v, w] = pure $ f t u v w
-    listToQuad _ _ = fail "not four of the thing"
+      P.between (P.char '{') (P.char '}') $
+        P.sepBy1 rating (P.char ',') >>= \case
+          [x, m, a, s] -> pure $ Part {x, m, a, s}
+          _ -> fail "parts need all four categories"
     rating = P.letter *> P.char '=' *> int
     int = P.many P.digit >>= (maybe (fail "can't parse int") pure . readMaybe)
 
@@ -89,25 +95,28 @@ part1 (Input {workflows, parts}) = go "in" (one ("in", parts))
   where
     go key partsMap
       | M.keys partsMap == ["A", "R"] = partsMap M.! "A" & map totalRating & sum
-      | key `elem` ["A", "R"] =
-          go
-            (fst $ M.findMin $ M.filterWithKey (\k _ -> k `notElem` ["A", "R"]) partsMap)
-            partsMap
+      | key `elem` ["A", "R"] = go (nonTerminalKey partsMap) partsMap
       | otherwise =
-          let (partsToSort, rest) = deleteLookup key partsMap
-              workflow = workflows' M.! key
-              partsMap' = maybe rest (sortParts rest workflow) partsToSort
-           in go (nextWorkflow workflow) partsMap'
-    sortParts rest workflow =
-      M.unionWith (++) rest . M.fromListWith (++) . map (applyWorkflow workflow &&& one)
-    workflows' = M.fromList $ map (name &&& id) workflows
+          let workflow = workflows M.! key
+           in go (nextWorkflow workflow) (passThrough workflow partsMap)
+
+nonTerminalKey :: Map Label a -> Label
+nonTerminalKey = fst . M.findMin . M.delete "A" . M.delete "R"
+
+passThrough :: Workflow -> Map Label [Part] -> Map Label [Part]
+passThrough workflow@(Workflow {workflowLabel}) partsMap =
+  maybe rest sortParts partsToSort
+  where
+    (partsToSort, rest) = deleteLookup workflowLabel partsMap
+    sortParts =
+      M.unionWith (++) rest . buildMultiMap (applyWorkflow workflow)
+
+buildMultiMap :: (Ord k) => (a -> k) -> [a] -> Map k [a]
+buildMultiMap keyFunction = M.fromListWith (++) . map (keyFunction &&& one)
 
 nextWorkflow :: Workflow -> Label
-nextWorkflow (Workflow {conditionalRules, unconditionalRule}) =
-  conditionalRules
-    & map (\(Conditional _ _ _ l) -> l)
-    & viaNonEmpty head
-    & fromMaybe (label unconditionalRule)
+nextWorkflow (Workflow {conditionalRules = conds, unconditionalRule = uncond}) =
+  conds & map goto & viaNonEmpty head & fromMaybe (label uncond)
 
 deleteLookup :: (Ord k) => k -> Map k a -> (Maybe a, Map k a)
 deleteLookup = M.updateLookupWithKey (\_ _ -> Nothing)
@@ -140,40 +149,43 @@ getCategory S (Part {s}) = s
 part2 :: Input -> Int
 part2 (Input {workflows}) = go start
   where
-    go constraint@(PartConstraint {position = "A"}) = combinations constraint
-    go (PartConstraint {position = "R"}) = 0
-    go constraint@(PartConstraint {position}) =
-      let Workflow {conditionalRules, unconditionalRule} = workflows' M.! position
-          (unconditional, conditionals) = mapAccumL f constraint conditionalRules
-       in go (unconditional {position = label unconditionalRule}) + sum (map go conditionals)
-    f constraint condition =
-      let constraint' = applyCondition constraint (invertCondition condition)
-       in (constraint', applyCondition constraint condition)
+    go constraint@(Range {rangeLabel = "A"}) = combinations constraint
+    go (Range {rangeLabel = "R"}) = 0
+    go constraint@(Range {rangeLabel}) =
+      sum $ map go (unconditional : conditionals)
+      where
+        unconditional = unconditional' {rangeLabel = label unconditionalRule}
+        Workflow {conditionalRules, unconditionalRule} =
+          workflows M.! rangeLabel
+        (unconditional', conditionals) = mapAccumL f constraint conditionalRules
+    f constraint condition = (constraint', applyCondition constraint condition)
+      where
+        constraint' = applyCondition constraint (invertCondition condition)
     start =
-      PartConstraint
-        { position = "in",
-          xConstraint = (1, 4000),
-          mConstraint = (1, 4000),
-          aConstraint = (1, 4000),
-          sConstraint = (1, 4000)
+      Range
+        { rangeLabel = "in",
+          xRange = (1, 4000),
+          mRange = (1, 4000),
+          aRange = (1, 4000),
+          sRange = (1, 4000)
         }
-    workflows' = M.fromList $ map (name &&& id) workflows
 
 invertCondition :: ConditionalRule -> ConditionalRule
 invertCondition (Conditional c Lt v l) = Conditional c Gt (v - 1) l
 invertCondition (Conditional c Gt v l) = Conditional c Lt (v + 1) l
 
-applyCondition :: PartConstraint -> ConditionalRule -> PartConstraint
-applyCondition constraint@(PartConstraint {xConstraint}) condition@(Conditional X _ _ label) = constraint {xConstraint = narrowRange xConstraint condition, position = label}
-applyCondition constraint@(PartConstraint {mConstraint}) condition@(Conditional M _ _ label) = constraint {mConstraint = narrowRange mConstraint condition, position = label}
-applyCondition constraint@(PartConstraint {aConstraint}) condition@(Conditional A _ _ label) = constraint {aConstraint = narrowRange aConstraint condition, position = label}
-applyCondition constraint@(PartConstraint {sConstraint}) condition@(Conditional S _ _ label) = constraint {sConstraint = narrowRange sConstraint condition, position = label}
+applyCondition :: Range -> ConditionalRule -> Range
+applyCondition constraint@(Range {xRange}) condition@(Conditional X _ _ label) = constraint {xRange = narrowRange xRange condition, rangeLabel = label}
+applyCondition constraint@(Range {mRange}) condition@(Conditional M _ _ label) = constraint {mRange = narrowRange mRange condition, rangeLabel = label}
+applyCondition constraint@(Range {aRange}) condition@(Conditional A _ _ label) = constraint {aRange = narrowRange aRange condition, rangeLabel = label}
+applyCondition constraint@(Range {sRange}) condition@(Conditional S _ _ label) = constraint {sRange = narrowRange sRange condition, rangeLabel = label}
 
 narrowRange :: (Rating, Rating) -> ConditionalRule -> (Rating, Rating)
 narrowRange (low, high) (Conditional _ Lt v _) = (low, min high (v - 1))
 narrowRange (low, high) (Conditional _ Gt v _) = (max low (v + 1), high)
 
-combinations (PartConstraint {xConstraint, mConstraint, aConstraint, sConstraint}) =
-  product $ map f [xConstraint, mConstraint, aConstraint, sConstraint]
+combinations :: Range -> Int
+combinations (Range {xRange, mRange, aRange, sRange}) =
+  product $ map f [xRange, mRange, aRange, sRange]
   where
     f (low, high) = high - low + 1

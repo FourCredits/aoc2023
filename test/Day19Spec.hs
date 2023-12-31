@@ -1,5 +1,6 @@
 module Day19Spec where
 
+import qualified Data.Map as M
 import Day19
 import Test.Hspec
 import Utils (realInput)
@@ -22,65 +23,20 @@ spec = do
 exampleParsed :: Input
 exampleParsed =
   Input
-    [ Workflow
-        { name = "px",
-          conditionalRules =
-            [ Conditional A Lt 2006 "qkq",
-              Conditional M Gt 2090 "A"
-            ],
-          unconditionalRule = Unconditional "rfg"
-        },
-      Workflow
-        { name = "pv",
-          conditionalRules = [Conditional A Gt 1716 "R"],
-          unconditionalRule = Unconditional "A"
-        },
-      Workflow
-        { name = "lnx",
-          conditionalRules = [Conditional M Gt 1548 "A"],
-          unconditionalRule = Unconditional "A"
-        },
-      Workflow
-        { name = "rfg",
-          conditionalRules = [Conditional S Lt 537 "gd", Conditional X Gt 2440 "R"],
-          unconditionalRule = Unconditional "A"
-        },
-      Workflow
-        { name = "qs",
-          conditionalRules = [Conditional S Gt 3448 "A"],
-          unconditionalRule = Unconditional "lnx"
-        },
-      Workflow
-        { name = "qkq",
-          conditionalRules = [Conditional X Lt 1416 "A"],
-          unconditionalRule = Unconditional "crn"
-        },
-      Workflow
-        { name = "crn",
-          conditionalRules = [Conditional X Gt 2662 "A"],
-          unconditionalRule = Unconditional "R"
-        },
-      Workflow
-        { name = "in",
-          conditionalRules = [Conditional S Lt 1351 "px"],
-          unconditionalRule = Unconditional "qqz"
-        },
-      Workflow
-        { name = "qqz",
-          conditionalRules = [Conditional S Gt 2770 "qs", Conditional M Lt 1801 "hdj"],
-          unconditionalRule = Unconditional "R"
-        },
-      Workflow
-        { name = "gd",
-          conditionalRules = [Conditional A Gt 3333 "R"],
-          unconditionalRule = Unconditional "R"
-        },
-      Workflow
-        { name = "hdj",
-          conditionalRules = [Conditional M Gt 838 "A"],
-          unconditionalRule = Unconditional "pv"
-        }
-    ]
+    ( M.fromList
+        [ ("crn", Workflow {workflowLabel = "crn", conditionalRules = [Conditional {category = X, relation = Gt, value = 2662, goto = "A"}], unconditionalRule = Unconditional {label = "R"}}),
+          ("gd", Workflow {workflowLabel = "gd", conditionalRules = [Conditional {category = A, relation = Gt, value = 3333, goto = "R"}], unconditionalRule = Unconditional {label = "R"}}),
+          ("hdj", Workflow {workflowLabel = "hdj", conditionalRules = [Conditional {category = M, relation = Gt, value = 838, goto = "A"}], unconditionalRule = Unconditional {label = "pv"}}),
+          ("in", Workflow {workflowLabel = "in", conditionalRules = [Conditional {category = S, relation = Lt, value = 1351, goto = "px"}], unconditionalRule = Unconditional {label = "qqz"}}),
+          ("lnx", Workflow {workflowLabel = "lnx", conditionalRules = [Conditional {category = M, relation = Gt, value = 1548, goto = "A"}], unconditionalRule = Unconditional {label = "A"}}),
+          ("pv", Workflow {workflowLabel = "pv", conditionalRules = [Conditional {category = A, relation = Gt, value = 1716, goto = "R"}], unconditionalRule = Unconditional {label = "A"}}),
+          ("px", Workflow {workflowLabel = "px", conditionalRules = [Conditional {category = A, relation = Lt, value = 2006, goto = "qkq"}, Conditional {category = M, relation = Gt, value = 2090, goto = "A"}], unconditionalRule = Unconditional {label = "rfg"}}),
+          ("qkq", Workflow {workflowLabel = "qkq", conditionalRules = [Conditional {category = X, relation = Lt, value = 1416, goto = "A"}], unconditionalRule = Unconditional {label = "crn"}}),
+          ("qqz", Workflow {workflowLabel = "qqz", conditionalRules = [Conditional {category = S, relation = Gt, value = 2770, goto = "qs"}, Conditional {category = M, relation = Lt, value = 1801, goto = "hdj"}], unconditionalRule = Unconditional {label = "R"}}),
+          ("qs", Workflow {workflowLabel = "qs", conditionalRules = [Conditional {category = S, relation = Gt, value = 3448, goto = "A"}], unconditionalRule = Unconditional {label = "lnx"}}),
+          ("rfg", Workflow {workflowLabel = "rfg", conditionalRules = [Conditional {category = S, relation = Lt, value = 537, goto = "gd"}, Conditional {category = X, relation = Gt, value = 2440, goto = "R"}], unconditionalRule = Unconditional {label = "A"}})
+        ]
+    )
     [ Part {x = 787, m = 2655, a = 1222, s = 2876},
       Part {x = 1679, m = 44, a = 2067, s = 496},
       Part {x = 2036, m = 264, a = 79, s = 2244},
