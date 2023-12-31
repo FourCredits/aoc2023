@@ -10,6 +10,7 @@ module Day19
     Relation (..),
     Input (..),
     part1,
+    part2,
   )
 where
 
@@ -45,6 +46,14 @@ type Rating = Int
 
 data Part = Part {x :: Rating, m :: Rating, a :: Rating, s :: Rating}
   deriving (Show, Eq)
+
+data PartConstraint = PartConstraint
+  { position :: Label,
+    xConstraint :: (Rating, Rating),
+    mConstraint :: (Rating, Rating),
+    aConstraint :: (Rating, Rating),
+    sConstraint :: (Rating, Rating)
+  }
 
 parse :: Text -> Either P.ParseError Input
 parse = P.parse (Input <$> workflows <*> (P.newline *> parts)) ""
@@ -127,3 +136,44 @@ getCategory X (Part {x}) = x
 getCategory M (Part {m}) = m
 getCategory A (Part {a}) = a
 getCategory S (Part {s}) = s
+
+part2 :: Input -> Int
+part2 (Input {workflows}) = go start
+  where
+    go constraint@(PartConstraint {position = "A"}) = combinations constraint
+    go (PartConstraint {position = "R"}) = 0
+    go constraint@(PartConstraint {position}) =
+      let Workflow {conditionalRules, unconditionalRule} = workflows' M.! position
+          (unconditional, conditionals) = mapAccumL f constraint conditionalRules
+       in go (unconditional {position = label unconditionalRule}) + sum (map go conditionals)
+    f constraint condition =
+      let constraint' = applyCondition constraint (invertCondition condition)
+       in (constraint', applyCondition constraint condition)
+    start =
+      PartConstraint
+        { position = "in",
+          xConstraint = (1, 4000),
+          mConstraint = (1, 4000),
+          aConstraint = (1, 4000),
+          sConstraint = (1, 4000)
+        }
+    workflows' = M.fromList $ map (name &&& id) workflows
+
+invertCondition :: ConditionalRule -> ConditionalRule
+invertCondition (Conditional c Lt v l) = Conditional c Gt (v - 1) l
+invertCondition (Conditional c Gt v l) = Conditional c Lt (v + 1) l
+
+applyCondition :: PartConstraint -> ConditionalRule -> PartConstraint
+applyCondition constraint@(PartConstraint {xConstraint}) condition@(Conditional X _ _ label) = constraint {xConstraint = narrowRange xConstraint condition, position = label}
+applyCondition constraint@(PartConstraint {mConstraint}) condition@(Conditional M _ _ label) = constraint {mConstraint = narrowRange mConstraint condition, position = label}
+applyCondition constraint@(PartConstraint {aConstraint}) condition@(Conditional A _ _ label) = constraint {aConstraint = narrowRange aConstraint condition, position = label}
+applyCondition constraint@(PartConstraint {sConstraint}) condition@(Conditional S _ _ label) = constraint {sConstraint = narrowRange sConstraint condition, position = label}
+
+narrowRange :: (Rating, Rating) -> ConditionalRule -> (Rating, Rating)
+narrowRange (low, high) (Conditional _ Lt v _) = (low, min high (v - 1))
+narrowRange (low, high) (Conditional _ Gt v _) = (max low (v + 1), high)
+
+combinations (PartConstraint {xConstraint, mConstraint, aConstraint, sConstraint}) =
+  product $ map f [xConstraint, mConstraint, aConstraint, sConstraint]
+  where
+    f (low, high) = high - low + 1

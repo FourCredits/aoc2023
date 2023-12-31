@@ -12,10 +12,12 @@ spec = do
 
   context "example" $ do
     it "part 1" $ part1 exampleParsed `shouldBe` 19114
+    it "part 2" $ part2 exampleParsed `shouldBe` 167409079868000
 
   context "real" $ do
     real <- realInput 19 & runIO
     it "part 1" $ part1 <$> parse real `shouldBe` Right 325952
+    it "part 2" $ part2 <$> parse real `shouldBe` Right 125744206494820
 
 exampleParsed :: Input
 exampleParsed =
