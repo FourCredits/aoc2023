@@ -1,7 +1,5 @@
 module Day05Spec where
 
-import Data.Function ((&))
-import Data.Functor ((<&>))
 import Day05
 import Test.Hspec
 import Utils (realInput)

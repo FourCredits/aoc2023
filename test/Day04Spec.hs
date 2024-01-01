@@ -1,7 +1,5 @@
 module Day04Spec where
 
-import Data.Function ((&))
-import Data.Functor ((<&>))
 import qualified Data.Set as S
 import Day04 (Card (..), parse, part1, part2)
 import Test.Hspec

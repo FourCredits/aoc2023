@@ -1,7 +1,5 @@
 module Day07Spec where
 
-import Data.Function ((&))
-import Data.Functor ((<&>))
 import Day07 (Card (..), Hand (..), parse, part1, part2)
 import Test.Hspec
 import Utils (realInput)
