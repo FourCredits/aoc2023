@@ -1,7 +1,7 @@
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE TupleSections #-}
 
-module Day20 (parse, part1) where
+module Day20 (parse, part1, solve) where
 
 import Data.List (partition)
 import qualified Data.Map as M
@@ -39,6 +39,11 @@ instance Semigroup PulseCounter where
 
 instance Monoid PulseCounter where
   mempty = PulseCounter {lows = 0, highs = 0}
+
+solve :: Text -> (Text, Text)
+solve = (display part1 &&& const "unimplemented") . parse
+  where
+    display f = either (const "parse error") (show . f)
 
 parse :: Text -> Either P.ParseError Modules
 parse = P.parse modules ""

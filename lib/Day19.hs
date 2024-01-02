@@ -13,6 +13,7 @@ module Day19
     Input (..),
     part1,
     part2,
+    solve,
   )
 where
 
@@ -60,6 +61,11 @@ data Range = Range
     aRange :: (Rating, Rating),
     sRange :: (Rating, Rating)
   }
+
+solve :: Text -> (Text, Text)
+solve = (display part1 &&& display part2) . parse
+  where
+    display f = either (const "parse errror") (show . f)
 
 parse :: Text -> Either P.ParseError Input
 parse = P.parse (Input <$> workflows <*> (P.newline *> parts)) ""
