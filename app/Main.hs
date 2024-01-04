@@ -20,6 +20,7 @@ import qualified Day17
 import qualified Day18
 import qualified Day19
 import qualified Day20
+import qualified Day21
 import Paths_aoc2023 (getDataFileName)
 import Text.Printf (printf)
 
@@ -54,5 +55,6 @@ days =
     (17, Day17.solve),
     (18, Day18.solve),
     (19, Day19.solve),
-    (20, Day20.solve)
+    (20, Day20.solve),
+    (21, Day21.solve)
   ]
